@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>小车模拟控制器</title>
+</head>
+<body>
+
+
+
+<div>
+    <p>小车指令</p>
+    <br>
+    <button type="button" id="ahead" class="command" value="ahead#">ahead</button>
+    <button type="button" id="back" class="command"  value="back#">back</button>
+    <button type="button" id="left" class="command"  value="left#">left</button>
+    <button type="button" id="right" class="command"  value="right#">right</button>
+    <button type="button" id="stop" class="command"  value="stop#">stop</button>
+    <br>
+    <button type="button" id="low" class="command"  value="low#">low</button>
+    <button type="button" id="middle" class="command"  value="middle#">middle</button>
+    <button type="button" id="high" class="command"  value="high#">high</button>
+    <br>
+    <button type="button" id="open" class="command"  value="open#">open</button>
+    <button type="button" id="close" class="command"  value="close#">close</button>
+</div>
+<div>
+    <h3>Messages:</h3>
+    <ol id="messages"></ol>
+</div>
+
+
+<script type="text/javascript" src="/js/jquery.min.js"></script>
+<script type="text/javascript" src="/js/sockjs.min.js"></script>
+<script type="text/javascript" src="/js/stomp.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function() {
+        var messageList = $("#messages");
+
+        var getMessageString = function(message) {
+            var date = new Date(message.date);
+            return "<li><p>Received: " + date + "</p><div>" + message.content + "</div></li>";
+        };
+
+        var socket = new SockJS('/command');//创建websocket对象
+        var stompClient = Stomp.over(socket);//使用stomp封装websocket
+
+        //stomp客户端连接
+        stompClient.connect({ }, function(frame) {
+            stompClient.subscribe('/topic/entries', function(data) {//开启监听器，监听服务器返回的信息（这个不用管，没有返回值）
+                var body = data.body;
+                var message = JSON.parse(body);
+                messageList.append(getMessageString(message));
+            });
+        });
+
+        //点击事件，进行websocket发送封装好的command对象的json字符串
+        $(".command").on("click", function() {
+            var body = {
+                carId : 1,
+                content : $(this).attr("value")
+            };
+            stompClient.send("/app/command", {}, JSON.stringify(body));//发送的目的url
+        });
+
+
+    });
+</script>
+</body>
+</html>
