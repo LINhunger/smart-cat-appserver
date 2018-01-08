@@ -20,6 +20,8 @@ public class Command {
         return content;
     }
 
+
+
     public void setContent(String content) {
         this.content = content;
     }
